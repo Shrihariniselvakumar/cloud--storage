@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud File Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        .container {
+            max-inline-size: 500px;
+            margin: auto;
+        }
+        input, button, select {
+            margin: 10px 0;
+            padding: 10px;
+            inline-size: 100%;
+
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cloud File Storage</h1>
+
+        <!-- Upload File Section -->
+        <h3>Upload File</h3>
+        <form id="uploadForm">
+            <label for="fileInput">Choose a file to upload:</label>
+            <input type="file" id="fileInput" title="Choose a file to upload" required>
+            
+            <label for="cloudProvider">Select cloud provider:</label>
+            <select id="cloudProvider" title="Select the cloud provider for upload" required>
+                <option value="aws">AWS</option>
+                <option value="gcp">Google Cloud</option>
+            </select>
+            
+            <button type="submit">Upload</button>
+        </form>
+
+        <!-- Download File Section -->
+        <h3>Download File</h3>
+        <form id="downloadForm">
+            <label for="downloadFilename">Enter the filename to download:</label>
+            <input type="text" id="downloadFilename" placeholder="Enter filename" title="Enter the file name you want to download" required>
+            
+            <label for="downloadCloudProvider">Select cloud provider:</label>
+            <select id="downloadCloudProvider" title="Select the cloud provider for download" required>
+                <option value="aws">AWS</option>
+                <option value="gcp">Google Cloud</option>
+            </select>
+            
+            <button type="submit">Download Now</button>
+        </form>
+
+        <!-- Delete File Section -->
+        <h3>Delete File</h3>
+        <form id="deleteForm">
+            <label for="deleteFilename">Enter the filename to delete:</label>
+            <input type="text" id="deleteFilename" placeholder="Enter filename" title="Enter the file name you want to delete" required>
+            
+            <label for="deleteCloudProvider">Select cloud provider:</label>
+            <select id="deleteCloudProvider" title="Select the cloud provider for deletion" required>
+                <option value="aws">AWS</option>
+                <option value="gcp">Google Cloud</option>
+            </select>
+            
+            <button type="submit">Delete</button>
+        </form>
+    </div>
+
+    <script>
+        const baseURL = 'http://127.0.0.1:5000';
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('fileInput').files[0];
+            const cloudProvider = document.getElementById('cloudProvider').value;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('cloud_provider', cloudProvider);
+
+            const response = await fetch(`${baseURL}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            alert(data.message || data.error);
+        });
+
+        document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const filename = document.getElementById('downloadFilename').value;
+            const cloudProvider = document.getElementById('downloadCloudProvider').value;
+
+            const response = await fetch(`${baseURL}/download/${filename}?cloud_provider=${cloudProvider}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } else {
+                alert("Error downloading file");
+            }
+        });
+
+        document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const filename = document.getElementById('deleteFilename').value;
+            const cloudProvider = document.getElementById('deleteCloudProvider').value;
+
+            const response = await fetch(`${baseURL}/delete/${filename}?cloud_provider=${cloudProvider}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            alert(data.message || data.error);
+        });
+    </script>
+</body>
+</html>
